@@ -1,26 +1,45 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding V3 Classes database...\n');
 
-  // ── 1. Admin ──
-  const passwordHash = await bcrypt.hash('V3Admin@2026', 12);
+  // ── 1. Admin (from environment variables) ──
+  const adminName = process.env.ADMIN_NAME;
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminName || !adminEmail || !adminPassword) {
+    console.error('═══════════════════════════════════════════════════');
+    console.error('  FATAL: Admin seed variables are not set.');
+    console.error('  Set these environment variables before seeding:');
+    console.error('    ADMIN_NAME     (e.g., "Vikash Prakash")');
+    console.error('    ADMIN_EMAIL    (e.g., "admin@v3classes.in")');
+    console.error('    ADMIN_PASSWORD (a strong password)');
+    console.error('═══════════════════════════════════════════════════');
+    process.exit(1);
+  }
+
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
   const admin = await prisma.admin.upsert({
-    where: { email: 'admin@v3classes.in' },
-    update: {},
+    where: { email: adminEmail.toLowerCase().trim() },
+    update: {
+      name: adminName,
+      passwordHash,
+    },
     create: {
-      name: 'Vikash Prakash',
-      email: 'admin@v3classes.in',
+      name: adminName,
+      email: adminEmail.toLowerCase().trim(),
       passwordHash,
       role: 'admin',
     },
   });
-  console.log('✅ Admin created:', admin.email);
+  console.log('✅ Admin created/updated:', admin.email);
 
-  // ── 2. Courses ──
+  // ── 2. Courses (idempotent upsert by name) ──
   const courses = [
     {
       name: 'Class IX',
@@ -97,11 +116,17 @@ async function main() {
   ];
 
   for (const course of courses) {
-    await prisma.course.create({ data: course });
+    // Find existing course by name to make idempotent
+    const existing = await prisma.course.findFirst({ where: { name: course.name } });
+    if (existing) {
+      await prisma.course.update({ where: { id: existing.id }, data: course });
+    } else {
+      await prisma.course.create({ data: course });
+    }
   }
-  console.log(`✅ ${courses.length} courses created`);
+  console.log(`✅ ${courses.length} courses created/updated`);
 
-  // ── 3. Faculty ──
+  // ── 3. Faculty (idempotent upsert by name+subject) ──
   const faculty = [
     {
       name: 'Vikash Prakash',
@@ -142,11 +167,18 @@ async function main() {
   ];
 
   for (const member of faculty) {
-    await prisma.faculty.create({ data: member });
+    const existing = await prisma.faculty.findFirst({
+      where: { name: member.name, subject: member.subject },
+    });
+    if (existing) {
+      await prisma.faculty.update({ where: { id: existing.id }, data: member });
+    } else {
+      await prisma.faculty.create({ data: member });
+    }
   }
-  console.log(`✅ ${faculty.length} faculty members created`);
+  console.log(`✅ ${faculty.length} faculty members created/updated`);
 
-  // ── 4. Results / Toppers ──
+  // ── 4. Results / Toppers (idempotent upsert by studentName+year) ──
   const results = [
     { studentName: 'Tanvi Gosal', category: 'board', marks: JSON.stringify({ physics: '92%', total: '436' }), sortOrder: 1, isFeatured: true },
     { studentName: 'Ayush Raj', category: 'board', marks: JSON.stringify({ physics: '84%', total: '437' }), sortOrder: 2, isFeatured: true },
@@ -163,23 +195,29 @@ async function main() {
   ];
 
   for (const result of results) {
-    await prisma.result.create({
-      data: {
-        studentName: result.studentName,
-        category: result.category,
-        marks: result.marks,
-        exam: 'Board Exam',
-        class: 'XII',
-        score: JSON.parse(result.marks).total,
-        year: '2025',
-        isFeatured: result.isFeatured || false,
-        sortOrder: result.sortOrder,
-      },
+    const data = {
+      studentName: result.studentName,
+      category: result.category,
+      marks: result.marks,
+      exam: 'Board Exam',
+      class: 'XII',
+      score: JSON.parse(result.marks).total,
+      year: '2025',
+      isFeatured: result.isFeatured || false,
+      sortOrder: result.sortOrder,
+    };
+    const existing = await prisma.result.findFirst({
+      where: { studentName: result.studentName, year: '2025' },
     });
+    if (existing) {
+      await prisma.result.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.result.create({ data });
+    }
   }
-  console.log(`✅ ${results.length} results created`);
+  console.log(`✅ ${results.length} results created/updated`);
 
-  // ── 5. Gallery ──
+  // ── 5. Gallery (idempotent upsert by imageUrl) ──
   const gallery = [
     { title: 'Celebration on Stage', imageUrl: 'assets/images/hero/hero-slide-1.jpg', category: 'events', sortOrder: 1 },
     { title: 'Classroom & Students', imageUrl: 'assets/images/hero/hero-slide-2.jpg', category: 'classroom', sortOrder: 2 },
@@ -190,11 +228,16 @@ async function main() {
   ];
 
   for (const item of gallery) {
-    await prisma.gallery.create({ data: item });
+    const existing = await prisma.gallery.findFirst({ where: { imageUrl: item.imageUrl } });
+    if (existing) {
+      await prisma.gallery.update({ where: { id: existing.id }, data: item });
+    } else {
+      await prisma.gallery.create({ data: item });
+    }
   }
-  console.log(`✅ ${gallery.length} gallery items created`);
+  console.log(`✅ ${gallery.length} gallery items created/updated`);
 
-  // ── 6. FAQs ──
+  // ── 6. FAQs (idempotent upsert by question text) ──
   const faqs = [
     {
       question: 'What courses does V3 Classes offer?',
@@ -339,32 +382,42 @@ async function main() {
   ];
 
   for (const faq of faqs) {
-    await prisma.fAQ.create({ data: faq });
+    const existing = await prisma.fAQ.findFirst({ where: { question: faq.question } });
+    if (existing) {
+      await prisma.fAQ.update({ where: { id: existing.id }, data: faq });
+    } else {
+      await prisma.fAQ.create({ data: faq });
+    }
   }
-  console.log(`✅ ${faqs.length} FAQs created`);
+  console.log(`✅ ${faqs.length} FAQs created/updated`);
 
-  // ── 7. Website Settings ──
-  await prisma.websiteSettings.create({
-    data: {
-      instituteName: 'V3 Classes',
-      tagline: 'Value of Your Vision and Visibility',
-      phone: '9386851441',
-      email: 'vikashprakashv3class@gmail.com',
-      address: '2nd Floor, Beside Indian Overseas Bank, Near JNL College Road, Khagaul, Bihar',
-      whatsapp: '919386851441',
-      instagram: 'https://www.instagram.com/v3classes',
-      youtube: 'https://www.youtube.com/@v3classes',
-      facebook: 'https://www.facebook.com/v3classes',
-      workingHours: 'Mon – Sat: 7:00 AM – 8:00 PM',
-    },
-  });
-  console.log('✅ Website settings created');
+  // ── 7. Website Settings (idempotent — upsert) ──
+  const existingSettings = await prisma.websiteSettings.findFirst();
+  const settingsData = {
+    instituteName: 'V3 Classes',
+    tagline: 'Value of Your Vision and Visibility',
+    phone: '9386851441',
+    email: 'vikashprakashv3class@gmail.com',
+    address: '2nd Floor, Beside Indian Overseas Bank, Near JNL College Road, Khagaul, Bihar',
+    whatsapp: '919386851441',
+    instagram: 'https://www.instagram.com/v3classes',
+    youtube: 'https://www.youtube.com/@v3classes',
+    facebook: 'https://www.facebook.com/v3classes',
+    workingHours: 'Mon – Sat: 7:00 AM – 8:00 PM',
+  };
+
+  if (existingSettings) {
+    await prisma.websiteSettings.update({ where: { id: existingSettings.id }, data: settingsData });
+  } else {
+    await prisma.websiteSettings.create({ data: settingsData });
+  }
+  console.log('✅ Website settings created/updated');
 
   console.log('\n🎉 Database seeding completed!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('Admin Login:');
-  console.log('  Email: admin@v3classes.in');
-  console.log('  Password: V3Admin@2026');
+  console.log(`  Email: ${adminEmail}`);
+  console.log('  Password: (the value you set in ADMIN_PASSWORD)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 

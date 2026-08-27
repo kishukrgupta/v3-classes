@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  const API_BASE = window.V3_API_BASE || (window.location.origin.replace(':8080', ':5000') + '/api');
+  const API_BASE = window.V3_API_BASE || 'http://localhost:5000/api';
   const CHAT_MSG_API = `${API_BASE}/chat/message`;
 
   let sessionId = sessionStorage.getItem('v3_chat_session_id') || null;

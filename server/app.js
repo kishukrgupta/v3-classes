@@ -16,10 +16,53 @@ app.use(helmet({
 }));
 
 // ── CORS ──
+// Build allowed origins list
+function buildAllowedOrigins() {
+  const origins = [];
+
+  // Always allow configured frontend URL(s) — supports comma-separated values
+  if (config.frontendUrl) {
+    config.frontendUrl.split(',').forEach((url) => {
+      const trimmed = url.trim().replace(/\/+$/, ''); // strip trailing slashes
+      if (trimmed) origins.push(trimmed);
+    });
+  }
+
+  // Allow localhost in development only
+  if (config.isDev) {
+    origins.push(
+      'http://localhost:8080',
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:8080',
+      'http://127.0.0.1:3000'
+    );
+  }
+
+  return [...new Set(origins)]; // deduplicate
+}
+
+const allowedOrigins = buildAllowedOrigins();
+
 app.use(cors({
-  origin: config.isDev
-    ? ['http://localhost:8080', 'http://localhost:3000', 'http://127.0.0.1:8080']
-    : config.frontendUrl,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Strip trailing slash from incoming origin for comparison
+    const cleanOrigin = origin.replace(/\/+$/, '');
+
+    if (allowedOrigins.includes(cleanOrigin)) {
+      return callback(null, true);
+    }
+
+    // In development, be more permissive
+    if (config.isDev) {
+      return callback(null, true);
+    }
+
+    callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -47,11 +90,13 @@ app.get('/api/health', (req, res) => {
 // ── API Routes ──
 app.use('/api', routes);
 
-// ── Serve Admin Dashboard (static files) ──
-app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
-app.get('/admin/*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
-});
+// ── Serve Admin Dashboard (development only — in production, admin is served from Vercel) ──
+if (config.isDev) {
+  app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
+  app.get('/admin/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'admin', 'index.html'));
+  });
+}
 
 // ── 404 Handler for unmatched API routes ──
 app.use('/api/*', (req, res) => {

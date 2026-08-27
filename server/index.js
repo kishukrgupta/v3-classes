@@ -27,11 +27,12 @@ process.on('uncaughtException', (err) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST, () => {
   console.log(`
   ╔══════════════════════════════════════════╗
   ║   V3 Classes Backend Server              ║
-  ║   Running on: http://localhost:${PORT}      ║
+  ║   Running on: http://${HOST}:${PORT}        ║
   ║   Environment: ${config.nodeEnv.padEnd(20)}  ║
   ╚══════════════════════════════════════════╝
   `);

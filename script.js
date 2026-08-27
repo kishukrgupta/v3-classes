@@ -398,7 +398,7 @@
   });
 
   // ── API CONFIGURATION ──
-  const V3_API_BASE = window.V3_API_BASE || (window.location.origin.replace(':8080', ':5000') + '/api');
+  const V3_API_BASE = window.V3_API_BASE || 'http://localhost:5000/api';
 
   // ── FORM SUBMISSION HANDLER ──
   const inquiryForm = document.getElementById('inquiryForm');

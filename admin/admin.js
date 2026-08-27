@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  const API_BASE = window.location.origin.replace(':8080', ':5000').replace(':3000', ':5000') + '/api';
+  const API_BASE = window.V3_API_BASE || 'http://localhost:5000/api';
 
   // ── STATE ──
   let token = localStorage.getItem('v3admin_token');
