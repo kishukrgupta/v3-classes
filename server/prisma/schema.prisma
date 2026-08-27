@@ -1,0 +1,195 @@
+// ══════════════════════════════════════════════
+// V3 Classes — Prisma Database Schema (SQLite)
+// ══════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Models ──
+
+model Admin {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+model Student {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  email     String?
+  class     String?
+  course    String?
+  school    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+  @@map("students")
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  classRange  String?
+  subjects    String   @default("[]") // JSON array stored as string
+  duration    String?
+  fee         String?
+  image       String?
+  level       String?
+  boards      String   @default("[]") // JSON array stored as string
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("courses")
+}
+
+model Faculty {
+  id            String   @id @default(uuid())
+  name          String
+  subject       String
+  qualification String?
+  experience    String?
+  photo         String?
+  description   String?
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("faculty")
+}
+
+model Result {
+  id          String   @id @default(uuid())
+  studentName String
+  exam        String?
+  class       String?
+  score       String?
+  rank        String?
+  year        String?
+  photo       String?
+  description String?
+  category    String?  @default("board")
+  marks       String?  // JSON object stored as string
+  isFeatured  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([isFeatured])
+  @@index([category])
+  @@map("results")
+}
+
+model Gallery {
+  id          String   @id @default(uuid())
+  title       String?
+  imageUrl    String
+  category    String?  @default("events")
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@map("gallery")
+}
+
+model Enquiry {
+  id        String   @id @default(uuid())
+  sessionId String?
+  name      String
+  phone     String
+  email     String?
+  class     String?
+  course    String?
+  message   String?
+  status    String   @default("NEW")      // NEW, CONTACTED, FOLLOW_UP, CONVERTED, CLOSED
+  source    String   @default("WEBSITE")  // WEBSITE, CHAT, CHATBOT, CONTACT_FORM, PHONE, WALK_IN
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([source])
+  @@map("enquiries")
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String?  @default("general")
+  keywords  String   @default("[]") // JSON array stored as string
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([category])
+  @@map("faqs")
+}
+
+model ChatSession {
+  id           String   @id @default(uuid())
+  sessionId    String   @unique
+  visitorName  String?
+  visitorPhone String?
+  visitorClass String?
+  currentState String   @default("MAIN_MENU")
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([sessionId])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id           String   @id @default(uuid())
+  sessionId    String
+  visitorName  String?
+  visitorPhone String?
+  message      String
+  sender       String   // USER, BOT, ADMIN
+  options      String?  // JSON array stored as string
+  createdAt    DateTime @default(now())
+
+  @@index([sessionId])
+  @@map("chat_messages")
+}
+
+model WebsiteSettings {
+  id            String   @id @default(uuid())
+  instituteName String   @default("V3 Classes")
+  tagline       String?  @default("Value of Your Vision and Visibility")
+  phone         String?  @default("9386851441")
+  email         String?  @default("vikashprakashv3class@gmail.com")
+  address       String?
+  whatsapp      String?  @default("919386851441")
+  instagram     String?
+  youtube       String?
+  facebook      String?
+  workingHours  String?  @default("Mon – Sat: 7:00 AM – 8:00 PM")
+  updatedAt     DateTime @updatedAt
+
+  @@map("website_settings")
+}

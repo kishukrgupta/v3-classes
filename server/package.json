@@ -1,0 +1,36 @@
+{
+  "name": "v3classes-backend",
+  "version": "1.0.0",
+  "description": "V3 Classes - Backend API Server",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js",
+    "prisma:generate": "npx prisma generate",
+    "prisma:migrate": "npx prisma migrate dev",
+    "prisma:migrate:prod": "npx prisma migrate deploy",
+    "prisma:seed": "node prisma/seed.js",
+    "prisma:studio": "npx prisma studio",
+    "setup": "npm install && npx prisma generate && npx prisma migrate dev --name init && node prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.8.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.8.0"
+  }
+}
