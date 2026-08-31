@@ -61,9 +61,14 @@
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
 
-    if (res.status === 401) { logout(); throw new Error('Session expired'); }
+    const isLoginEndpoint = endpoint === '/admin/login' || endpoint.endsWith('/admin/login');
+
+    if (res.status === 401 && !isLoginEndpoint) {
+      logout();
+      throw new Error('Session expired');
+    }
     if (!res.ok) throw new Error(data.message || 'Request failed');
     return data;
   }
