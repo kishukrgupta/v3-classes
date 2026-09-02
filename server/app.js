@@ -18,7 +18,13 @@ app.use(helmet({
 // ── CORS ──
 // Build allowed origins list
 function buildAllowedOrigins() {
-  const origins = [];
+  const origins = [
+    'https://v3classes.co.in',
+    'https://www.v3classes.co.in',
+    'https://v3-classes.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
 
   // Always allow configured frontend URL(s) — supports comma-separated values
   if (config.frontendUrl) {
@@ -28,11 +34,10 @@ function buildAllowedOrigins() {
     });
   }
 
-  // Allow localhost in development only
+  // Allow additional localhost/dev origins in development
   if (config.isDev) {
     origins.push(
       'http://localhost:8080',
-      'http://localhost:3000',
       'http://localhost:5000',
       'http://127.0.0.1:8080',
       'http://127.0.0.1:3000'
@@ -64,7 +69,7 @@ app.use(cors({
     callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
