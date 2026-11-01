@@ -50,25 +50,31 @@ router.patch('/students/:id', validate(updateStudentRules), adminController.upda
 router.delete('/students/:id', adminController.deleteStudent);
 
 // ── Courses ──
+router.get('/courses', adminController.getCourses);
 router.post('/courses', validate(createCourseRules), adminController.createCourse);
 router.patch('/courses/:id', validate(updateCourseRules), adminController.updateCourse);
 router.delete('/courses/:id', adminController.deleteCourse);
 
 // ── Faculty ──
+router.get('/faculty', adminController.getFaculty);
 router.post('/faculty', validate(createFacultyRules), adminController.createFaculty);
 router.patch('/faculty/:id', validate(updateFacultyRules), adminController.updateFaculty);
 router.delete('/faculty/:id', adminController.deleteFaculty);
 
 // ── Results ──
+router.get('/results', adminController.getResults);
 router.post('/results', validate(createResultRules), adminController.createResult);
 router.patch('/results/:id', validate(updateResultRules), adminController.updateResult);
 router.delete('/results/:id', adminController.deleteResult);
 
 // ── Gallery ──
+router.get('/gallery', adminController.getGallery);
 router.post('/gallery', adminController.createGalleryItem);
+router.patch('/gallery/:id', adminController.updateGalleryItem);
 router.delete('/gallery/:id', adminController.deleteGalleryItem);
 
 // ── FAQs ──
+router.get('/faqs', adminController.getFaqs);
 router.post('/faqs', validate(createFaqRules), adminController.createFaq);
 router.patch('/faqs/:id', validate(updateFaqRules), adminController.updateFaq);
 router.delete('/faqs/:id', adminController.deleteFaq);

@@ -1264,6 +1264,67 @@ input, textarea, select {
   gap: var(--space-lg);
 }
 
+/* ============================================
+   RESULTS / TOPPERS — CONTINUOUS HORIZONTAL MARQUEE
+   ============================================ */
+.toppers__marquee {
+  --topper-gap: var(--space-lg);
+  --topper-duration: 35s;
+  --topper-card-width: 215px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  gap: var(--topper-gap);
+  padding: 16px 0;
+  margin: -8px 0;
+  user-select: none;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
+}
+
+.toppers__track {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0;
+  gap: var(--topper-gap);
+  align-items: stretch;
+  animation: toppersScroll var(--topper-duration) linear infinite;
+  will-change: transform;
+}
+
+/* Subtle hover & touch pause */
+.toppers__marquee:hover .toppers__track,
+.toppers__marquee:focus-within .toppers__track,
+.toppers__marquee.is-paused .toppers__track {
+  animation-play-state: paused;
+}
+
+.toppers__track .topper-card {
+  flex: 0 0 var(--topper-card-width) !important;
+  width: var(--topper-card-width) !important;
+  max-width: var(--topper-card-width) !important;
+  opacity: 1 !important;
+  transform: none;
+}
+
+.toppers__track .topper-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--shadow-card-hover);
+  border-color: transparent;
+}
+
+@keyframes toppersScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - var(--topper-gap, 24px)));
+  }
+}
+
 .topper-card {
   background: var(--white);
   border-radius: var(--radius-lg);
@@ -2308,6 +2369,24 @@ input, textarea, select {
     gap: var(--space-md);
   }
 
+  .toppers__marquee {
+    --topper-gap: var(--space-md);
+    --topper-duration: 30s;
+    --topper-card-width: 200px;
+    padding: 12px 0;
+    mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+  }
+
+  @keyframes toppersScroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--space-md, 16px)));
+    }
+  }
+
   /* Achievements */
   .achievements__grid {
     grid-template-columns: 1fr 1fr;
@@ -2394,6 +2473,24 @@ input, textarea, select {
 
   .toppers__grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .toppers__marquee {
+    --topper-gap: 12px;
+    --topper-duration: 25s;
+    --topper-card-width: 190px;
+    padding: 10px 0;
+    mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
+  }
+
+  @keyframes toppersScroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - 12px));
+    }
   }
 
   .achievements__grid {

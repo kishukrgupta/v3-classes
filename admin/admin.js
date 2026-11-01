@@ -393,8 +393,18 @@
   // ═══════════════════════════════════════
   async function renderCrudPage({ title, apiPath, columns, formFields, nameField = 'name' }) {
     try {
-      const res = await api(apiPath.startsWith('/admin') ? apiPath : `/admin${apiPath}`);
-      const items = res.data || [];
+      let res;
+      const targetAdminPath = apiPath.startsWith('/admin') ? apiPath : `/admin${apiPath}`;
+      try {
+        res = await api(targetAdminPath);
+      } catch (err) {
+        if (!apiPath.startsWith('/admin')) {
+          res = await api(apiPath);
+        } else {
+          throw err;
+        }
+      }
+      const items = res?.data || [];
 
       pageContent.innerHTML = `
         <div class="data-section">

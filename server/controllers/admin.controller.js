@@ -57,6 +57,11 @@ const deleteStudent = catchAsync(async (req, res) => {
 // COURSE CRUD
 // ═══════════════════════════════════════
 
+const getCourses = catchAsync(async (req, res) => {
+  const courses = await prisma.course.findMany({ orderBy: { sortOrder: 'asc' } });
+  res.json({ status: 'success', data: courses });
+});
+
 const createCourse = catchAsync(async (req, res) => {
   const course = await prisma.course.create({ data: req.body });
   res.status(201).json({ status: 'success', data: course });
@@ -75,6 +80,11 @@ const deleteCourse = catchAsync(async (req, res) => {
 // ═══════════════════════════════════════
 // FACULTY CRUD
 // ═══════════════════════════════════════
+
+const getFaculty = catchAsync(async (req, res) => {
+  const faculty = await prisma.faculty.findMany({ orderBy: { sortOrder: 'asc' } });
+  res.json({ status: 'success', data: faculty });
+});
 
 const createFaculty = catchAsync(async (req, res) => {
   const faculty = await prisma.faculty.create({ data: req.body });
@@ -95,6 +105,11 @@ const deleteFaculty = catchAsync(async (req, res) => {
 // RESULT CRUD
 // ═══════════════════════════════════════
 
+const getResults = catchAsync(async (req, res) => {
+  const results = await prisma.result.findMany({ orderBy: { sortOrder: 'asc' } });
+  res.json({ status: 'success', data: results });
+});
+
 const createResult = catchAsync(async (req, res) => {
   const result = await prisma.result.create({ data: req.body });
   res.status(201).json({ status: 'success', data: result });
@@ -114,12 +129,22 @@ const deleteResult = catchAsync(async (req, res) => {
 // GALLERY CRUD
 // ═══════════════════════════════════════
 
+const getGallery = catchAsync(async (req, res) => {
+  const gallery = await prisma.gallery.findMany({ orderBy: { createdAt: 'desc' } });
+  res.json({ status: 'success', data: gallery });
+});
+
 const createGalleryItem = catchAsync(async (req, res) => {
   const { title, imageUrl, category, description } = req.body;
   const item = await prisma.gallery.create({
     data: { title, imageUrl, category, description },
   });
   res.status(201).json({ status: 'success', data: item });
+});
+
+const updateGalleryItem = catchAsync(async (req, res) => {
+  const item = await prisma.gallery.update({ where: { id: req.params.id }, data: req.body });
+  res.json({ status: 'success', data: item });
 });
 
 const deleteGalleryItem = catchAsync(async (req, res) => {
@@ -130,6 +155,11 @@ const deleteGalleryItem = catchAsync(async (req, res) => {
 // ═══════════════════════════════════════
 // FAQ CRUD
 // ═══════════════════════════════════════
+
+const getFaqs = catchAsync(async (req, res) => {
+  const faqs = await prisma.fAQ.findMany({ orderBy: { sortOrder: 'asc' } });
+  res.json({ status: 'success', data: faqs });
+});
 
 const createFaq = catchAsync(async (req, res) => {
   const faq = await prisma.fAQ.create({ data: req.body });
@@ -194,17 +224,23 @@ module.exports = {
   createStudent,
   updateStudent,
   deleteStudent,
+  getCourses,
   createCourse,
   updateCourse,
   deleteCourse,
+  getFaculty,
   createFaculty,
   updateFaculty,
   deleteFaculty,
+  getResults,
   createResult,
   updateResult,
   deleteResult,
+  getGallery,
   createGalleryItem,
+  updateGalleryItem,
   deleteGalleryItem,
+  getFaqs,
   createFaq,
   updateFaq,
   deleteFaq,

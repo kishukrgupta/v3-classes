@@ -272,6 +272,19 @@
     });
   });
 
+  // ── RESULTS HORIZONTAL AUTO-SCROLL MARQUEE ──
+  const toppersMarquee = document.getElementById('toppersMarquee');
+  if (toppersMarquee) {
+    const pauseMarquee = () => toppersMarquee.classList.add('is-paused');
+    const resumeMarquee = () => toppersMarquee.classList.remove('is-paused');
+
+    toppersMarquee.addEventListener('mouseenter', pauseMarquee);
+    toppersMarquee.addEventListener('mouseleave', resumeMarquee);
+    toppersMarquee.addEventListener('touchstart', pauseMarquee, { passive: true });
+    toppersMarquee.addEventListener('touchend', resumeMarquee, { passive: true });
+    toppersMarquee.addEventListener('touchcancel', resumeMarquee, { passive: true });
+  }
+
   // ── RESULTS FILTER ──
   const resultsFilters = document.querySelectorAll('.results__filter');
   const topperCards = document.querySelectorAll('.topper-card');
@@ -297,6 +310,14 @@
             card.style.display = 'none';
           }, 400);
         }
+      });
+
+      // Smoothly restart marquee track animation on filter
+      const tracks = document.querySelectorAll('.toppers__track');
+      tracks.forEach(track => {
+        track.style.animation = 'none';
+        track.offsetHeight;
+        track.style.animation = '';
       });
     });
   });
