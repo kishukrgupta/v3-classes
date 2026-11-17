@@ -57,7 +57,7 @@
   // ── API HELPER ──
   async function api(endpoint, options = {}) {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
@@ -159,7 +159,7 @@
   }
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
   // ═══════════════════════════════════════
@@ -421,7 +421,7 @@
                 <tr>
                   ${columns.map(c => `<td>${c.render ? c.render(item) : escapeHtml(String(item[c.key]||'-'))}</td>`).join('')}
                   <td>
-                    <button class="btn btn--ghost btn--sm edit-btn" data-id="${item.id}" data-item='${JSON.stringify(item).replace(/'/g,"&#39;")}'>Edit</button>
+                    <button class="btn btn--ghost btn--sm edit-btn" data-id="${item.id}" data-item='${escapeHtml(JSON.stringify(item))}'>Edit</button>
                     <button class="btn btn--danger btn--sm delete-btn" data-id="${item.id}">Delete</button>
                   </td>
                 </tr>
@@ -443,7 +443,7 @@
       // Edit buttons
       document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          const item = JSON.parse(btn.dataset.item.replace(/&#39;/g, "'"));
+          const item = JSON.parse(btn.dataset.item);
           showFormModal(`Edit ${title.slice(0,-1)}`, formFields, item, async (data) => {
             const path = apiPath.startsWith('/admin') ? apiPath : `/admin${apiPath}`;
             await api(`${path}/${item.id}`, { method: 'PATCH', body: JSON.stringify(data) });
@@ -482,6 +482,9 @@
           <form id="modalForm">
             ${fields.map(f => {
               const val = existingData ? (existingData[f.key] || '') : (f.default || '');
+              if (f.type === 'image') {
+                return `<div class="form-group"><label>${f.label}<input type="file" name="${f.key}" accept="image/jpeg,image/png,image/webp,image/gif" ${existingData ? '' : 'required'}></label></div>`;
+              }
               if (f.type === 'textarea') {
                 return `<div class="form-group"><label>${f.label}</label><textarea name="${f.key}" ${f.required?'required':''}>${escapeHtml(String(val))}</textarea></div>`;
               }
@@ -518,13 +521,36 @@
           data[f.key] = form.querySelector(`[name="${f.key}"]`).checked;
         } else {
           const v = formData.get(f.key);
-          if (v !== null && v !== '') data[f.key] = v;
+          if (f.type !== 'image' && v !== null && (v !== '' || f.allowEmpty)) data[f.key] = v;
         }
       });
+      const saveButton = overlay.querySelector('#modalSubmit');
+      saveButton.disabled = true;
       try {
+        const input = form.elements.imageUrl;
+        if (input?.type === 'file') {
+          const file = input.files[0];
+          if (file) {
+            if (file.size > 5 * 1024 * 1024) throw new Error('Choose a photo under 5 MB.');
+            const upload = new FormData();
+            upload.append('image', file);
+            const result = await api('/admin/upload', { method: 'POST', body: upload });
+            if (!result.data?.url || result.data.publicId?.startsWith('placeholder_')) {
+              throw new Error('Photo storage is unavailable. Please try again later.');
+            }
+            input.dataset.uploadedUrl = result.data.url;
+            input.required = false;
+            input.value = '';
+          }
+          if (input.dataset.uploadedUrl) data.imageUrl = input.dataset.uploadedUrl;
+        }
         await onSubmit(data);
         closeModal();
-      } catch (err) { toast(err.message, 'error'); }
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        saveButton.disabled = false;
+      }
     });
   }
 
@@ -640,18 +666,18 @@
 
   function renderGallery() {
     renderCrudPage({
-      title: 'Gallery', apiPath: '/gallery',
+      title: 'Photos', apiPath: '/gallery',
       columns: [
         { label:'Title', key:'title' },
         { label:'Category', key:'category' },
-        { label:'Image', key:'imageUrl', render: i => i.imageUrl ? `<img src="${i.imageUrl.startsWith('http')?i.imageUrl:'../'+i.imageUrl}" style="height:40px;border-radius:4px" alt="">` : '-' },
+        { label:'Image', key:'imageUrl', render: i => i.imageUrl ? `<img src="${escapeHtml(i.imageUrl.startsWith('http') ? i.imageUrl : '../' + i.imageUrl)}" style="height:40px;border-radius:4px" alt="">` : '-' },
         { label:'Date', key:'createdAt', render: i => formatDate(i.createdAt) },
       ],
       formFields: [
         { key:'title', label:'Title' },
-        { key:'imageUrl', label:'Image URL', required:true },
+        { key:'imageUrl', label:'Photo (JPG, PNG, WebP or GIF, up to 5 MB)', type:'image' },
         { key:'category', label:'Category', type:'select', options:[{value:'events',label:'Events'},{value:'classroom',label:'Classroom'},{value:'achievements',label:'Achievements'}] },
-        { key:'description', label:'Description', type:'textarea' },
+        { key:'description', label:'Caption', type:'textarea', allowEmpty:true },
       ],
     });
   }
