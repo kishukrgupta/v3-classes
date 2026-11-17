@@ -73,7 +73,7 @@ cd server
 npx prisma generate
 
 # Create database tables (creates migration)
-npx prisma migrate dev --name init
+npx prisma migrate dev
 
 # Seed the database with initial data
 node prisma/seed.js
@@ -191,7 +191,9 @@ Click **Save Changes**. Render will automatically redeploy.
 
 ### Step H: Run Prisma Migrations
 
-Migrations run automatically during the build step (`npx prisma migrate deploy`).
+Migrations run automatically during the Render build step (`npx prisma migrate deploy`). On a new database, Prisma creates the original tables and then adds articles. For a database that already has the original tables, first compare its schema with `0_init` and inspect its migration history. If the original schema is present and `0_init` has not been applied, register it with `npx prisma migrate resolve --applied 0_init` against that database before the first deployment of this change. Then run `npx prisma migrate deploy` to add articles. Deploy Render before Vercel so the public article pages and sitemap have a working backend.
+
+In Google Search Console, verify `v3classes.co.in`, submit `/sitemap.xml` and `/articles-sitemap.xml`, then inspect the homepage and request indexing.
 
 If you need to run them manually, use the **Render Shell** tab:
 ```bash

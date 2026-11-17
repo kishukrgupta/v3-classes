@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const ApiError = require('../utils/ApiError');
 const { authenticate } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const authController = require('../controllers/auth.controller');
@@ -15,6 +16,9 @@ const { createFacultyRules, updateFacultyRules } = require('../validators/facult
 const { createResultRules, updateResultRules } = require('../validators/result.validator');
 const { createFaqRules, updateFaqRules } = require('../validators/faq.validator');
 
+const articles = require('../controllers/article.controller');
+const { createArticleRules, updateArticleRules, useArticleFields } = require('../validators/article.validator');
+
 const router = express.Router();
 
 // Multer config for file uploads (memory storage for Cloudinary)
@@ -22,10 +26,10 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      cb(ApiError.badRequest('Choose a JPG, PNG, WebP or GIF image'), false);
     }
   },
 });
@@ -72,6 +76,11 @@ router.get('/gallery', adminController.getGallery);
 router.post('/gallery', adminController.createGalleryItem);
 router.patch('/gallery/:id', adminController.updateGalleryItem);
 router.delete('/gallery/:id', adminController.deleteGalleryItem);
+
+router.get('/articles', articles.list);
+router.post('/articles', validate(createArticleRules), useArticleFields, articles.create);
+router.patch('/articles/:id', validate(updateArticleRules), useArticleFields, articles.update);
+router.delete('/articles/:id', articles.remove);
 
 // ── FAQs ──
 router.get('/faqs', adminController.getFaqs);

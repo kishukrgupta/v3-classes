@@ -15,7 +15,7 @@
     "prisma:migrate:deploy": "npx prisma migrate deploy",
     "prisma:seed": "node prisma/seed.js",
     "prisma:studio": "npx prisma studio",
-    "setup": "npm install && npx prisma generate && npx prisma migrate dev --name init && node prisma/seed.js"
+    "setup": "npm install && npx prisma generate && npx prisma migrate dev && node prisma/seed.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

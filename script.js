@@ -245,7 +245,6 @@
 
   // ── GALLERY FILTER ──
   const galleryFilters = document.querySelectorAll('.gallery__filter');
-  const galleryItems = document.querySelectorAll('.gallery__item');
 
   galleryFilters.forEach(filter => {
     filter.addEventListener('click', () => {
@@ -254,7 +253,7 @@
       galleryFilters.forEach(f => f.classList.remove('active'));
       filter.classList.add('active');
 
-      galleryItems.forEach(item => {
+      document.querySelectorAll('.gallery__item').forEach(item => {
         if (category === 'all' || item.dataset.category === category) {
           item.style.display = '';
           item.style.opacity = '0';
@@ -264,9 +263,7 @@
           });
         } else {
           item.style.opacity = '0';
-          setTimeout(() => {
-            item.style.display = 'none';
-          }, 400);
+          item.style.display = 'none';
         }
       });
     });
@@ -327,6 +324,52 @@
   document.querySelectorAll('.gallery__item img').forEach(img => {
     galleryImages.push(img.src);
   });
+
+  const galleryGrid = document.getElementById('galleryGrid');
+  if (galleryGrid && window.V3_API_BASE) {
+    fetch(`${window.V3_API_BASE}/gallery`)
+      .then(response => {
+        if (!response.ok) throw new Error('Gallery unavailable');
+        return response.json();
+      })
+      .then(({ data }) => {
+        data.forEach(photo => {
+          let url;
+          try {
+            url = new URL(photo.imageUrl, document.baseURI);
+          } catch {
+            return;
+          }
+          if (!['https:', 'http:'].includes(url.protocol) || galleryImages.includes(url.href)) return;
+
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'gallery__item gallery__item--posted';
+          item.dataset.category = photo.category || 'events';
+          const image = document.createElement('img');
+          image.src = url.href;
+          image.alt = photo.title || photo.description || 'V3 Classes gallery photo';
+          image.loading = 'lazy';
+          item.append(image);
+          if (photo.description || photo.title) {
+            const caption = document.createElement('span');
+            caption.className = 'gallery__caption';
+            caption.textContent = photo.description || photo.title;
+            item.append(caption);
+          }
+          const index = galleryImages.push(url.href) - 1;
+          item.addEventListener('click', () => window.openLightbox(index));
+          const activeCategory = document.querySelector('.gallery__filter.active')?.dataset.filter;
+          if (activeCategory && activeCategory !== 'all' && activeCategory !== item.dataset.category) {
+            item.style.display = 'none';
+          }
+          galleryGrid.append(item);
+        });
+      })
+      .catch(() => {
+        // The original gallery remains available when the backend is offline.
+      });
+  }
 
   let currentLightboxIndex = 0;
 

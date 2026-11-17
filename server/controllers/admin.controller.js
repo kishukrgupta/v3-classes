@@ -213,6 +213,10 @@ const uploadImage = catchAsync(async (req, res) => {
   const folder = req.body.folder || 'v3classes';
   const result = await storageService.upload(req.file.buffer, { folder });
 
+  if (result.publicId.startsWith('placeholder_')) {
+    throw new ApiError(503, 'Photo storage is not configured');
+  }
+
   res.json({
     status: 'success',
     data: { url: result.url, publicId: result.publicId },

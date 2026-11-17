@@ -111,6 +111,19 @@ model Gallery {
   @@map("gallery")
 }
 
+model Article {
+  id          String   @id @default(uuid())
+  title       String
+  summary     String
+  body        String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished])
+  @@map("articles")
+}
+
 model Enquiry {
   id        String   @id @default(uuid())
   sessionId String?

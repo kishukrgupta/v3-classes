@@ -6,6 +6,7 @@ const path = require('path');
 const config = require('./config');
 const errorHandler = require('./middleware/errorHandler');
 const routes = require('./routes');
+const articles = require('./controllers/article.controller');
 
 const app = express();
 
@@ -91,6 +92,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+app.get('/publishing/articles', articles.index);
+app.get('/publishing/articles/:id', articles.show);
+app.get('/publishing/sitemap.xml', articles.sitemap);
 
 // ── API Routes ──
 app.use('/api', routes);

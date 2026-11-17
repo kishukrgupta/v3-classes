@@ -30,7 +30,8 @@ class StorageService {
     return new Promise((resolve, reject) => {
       const uploadOptions = {
         folder,
-        resource_type: 'auto',
+        resource_type: 'image',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
       };
 
       if (publicId) {

@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/articles",
+      "destination": "https://v3-classes.onrender.com/publishing/articles"
+    },
+    {
+      "source": "/articles/:id",
+      "destination": "https://v3-classes.onrender.com/publishing/articles/:id"
+    },
+    {
+      "source": "/articles-sitemap.xml",
+      "destination": "https://v3-classes.onrender.com/publishing/sitemap.xml"
+    }
+  ]
+}
